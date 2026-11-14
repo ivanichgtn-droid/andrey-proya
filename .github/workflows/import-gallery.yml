@@ -1,0 +1,44 @@
+name: Import Proyavlenny gallery photos
+on:
+  push:
+    branches: [feature/landing-v2-photo-scroll]
+    paths: ['.github/workflows/import-gallery.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import-gallery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/landing-v2-photo-scroll
+      - name: Download and store gallery images permanently
+        env:
+          PHOTO1: "https://media.canva.com/v2/image-resize/format:JPG/height:200/quality:75/uri:ifs%3A%2F%2FM%2Fc0dffc17-4508-4d2f-9742-c721f7fd9938/watermark:F/width:150?csig=AAAAAAAAAAAAAAAAAAAAAHgu4P_D006YxOLZ7WXCBBpSakoPXnhdtP0txsAPFSxl&exp=1794714111&osig=AAAAAAAAAAAAAAAAAAAAABeeQ2-4I354y6VFmCstuyw1dPSkeWN_eWH-7fYw-YKA&signer=media-rpc&token=AAIAAU0AJGMwZGZmYzE3LTQ1MDgtNGQyZi05NzQyLWM3MjFmN2ZkOTkzOAAAAAABod1MDBhnZQZqRpB9whNVYw2FxeazItxAHO32sMnu4zwRHfHggw&x-canva-quality=thumbnail"
+          PHOTO2: "https://media.canva.com/v2/image-resize/format:JPG/height:200/quality:75/uri:ifs%3A%2F%2FM%2F6140d588-91b0-45a8-82c8-aab3b5be07ad/watermark:F/width:89?csig=AAAAAAAAAAAAAAAAAAAAAIz1z0qOKHTDUUZ_6TPrX4-WuzCVtJiX0OdM0jUUnY_T&exp=1794712914&osig=AAAAAAAAAAAAAAAAAAAAAE0LQKSwKLhoddFjxaCwveOE9mw330f6_Sx2Rl3BR7Jw&signer=media-rpc&token=AAIAAU0AJDYxNDBkNTg4LTkxYjAtNDVhOC04MmM4LWFhYjNiNWJlMDdhZAAAAAABod05yFDDlx9CQnX3aRAyrqLXxdgVFtJx9bEfXHNQWkMil5_QtA&x-canva-quality=thumbnail"
+          PHOTO3: "https://media.canva.com/v2/image-resize/format:JPG/height:200/quality:75/uri:ifs%3A%2F%2FM%2F1d08da7e-a985-4b47-9fda-ed6b131dc8b1/watermark:F/width:150?csig=AAAAAAAAAAAAAAAAAAAAAMFsq5Yx6n1kyBHatFqD4j4C3vO2wTY-p760gdKAdVtN&exp=1794714569&osig=AAAAAAAAAAAAAAAAAAAAAK3vhiShUkcbTpee9A0pS4l0o-rj_45Zx2aFSlAGHCor&signer=media-rpc&token=AAIAAU0AJDFkMDhkYTdlLWE5ODUtNGI0Ny05ZmRhLWVkNmIxMzFkYzhiMQAAAAABod1TCSg4nw-88UJMAItU8qvAkX4ZlzCGPJheMwnjqt_qTspxlg&x-canva-quality=thumbnail"
+          PHOTO4: "https://media.canva.com/v2/image-resize/format:JPG/height:164/quality:75/uri:ifs%3A%2F%2FM%2F59af83f3-e95e-4731-89c3-bd4febaac31e/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAHtzBpVa-AvOLcI5EX-lYn-uCQ3uvwQpcNQSYUHLfZpg&exp=1794714961&osig=AAAAAAAAAAAAAAAAAAAAAFXah63sHlbh0nU_RS4ZlUCBTK8GOho_orG5HpIVOli5&signer=media-rpc&token=AAIAAU0AJDU5YWY4M2YzLWU5NWUtNDczMS04OWMzLWJkNGZlYmFhYzMxZQAAAAABod1ZBGj9mkBMVC5qt5AJVY2OL-RkR6R4MByw7X_t66vmITbrtQ&x-canva-quality=thumbnail"
+          PHOTO5: "https://media.canva.com/v2/image-resize/format:JPG/height:200/quality:75/uri:ifs%3A%2F%2FM%2Fff1bda74-1829-487a-9e31-175cfc1305d1/watermark:F/width:150?csig=AAAAAAAAAAAAAAAAAAAAAMfTw2vJ39v6CUZ04QmoGA9CkYhgzH7GtIb9w5MP_g4A&exp=1794711813&osig=AAAAAAAAAAAAAAAAAAAAAPrFouGRid6JC68C5fwmFMInCNoH4HSIGbuqZBgaC6kG&signer=media-rpc&token=AAIAAU0AJGZmMWJkYTc0LTE4MjktNDg3YS05ZTMxLTE3NWNmYzEzMDVkMQAAAAABod0o-4jiT59QIyRLwXNiWQY00_7G3qudmQmIXszCInWw0lz0gQ&x-canva-quality=thumbnail"
+        run: |
+          python -m pip install --quiet Pillow
+          python - <<'PY'
+          import os, io, urllib.request
+          from PIL import Image
+          os.makedirs('assets', exist_ok=True)
+          for i in range(1,6):
+              req=urllib.request.Request(os.environ['PHOTO'+str(i)],headers={'User-Agent':'Mozilla/5.0'})
+              with urllib.request.urlopen(req,timeout=25) as resp:
+                  raw=resp.read()
+              im=Image.open(io.BytesIO(raw)).convert('RGB')
+              if min(im.size)<80: raise ValueError('unexpected small image: '+str(im.size))
+              im.save('assets/photo-'+str(i)+'.webp',format='WEBP',quality=86)
+              print(i, im.size, len(raw))
+          PY
+      - name: Commit photo assets to feature branch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add assets/photo-1.webp assets/photo-2.webp assets/photo-3.webp assets/photo-4.webp assets/photo-5.webp
+          git commit -m "Add permanent Proyavlenny photo assets" || exit 0
+          git push origin HEAD:feature/landing-v2-photo-scroll

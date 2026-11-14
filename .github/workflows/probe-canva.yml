@@ -1,0 +1,31 @@
+name: Check Canva resolution access
+on:
+  push:
+    branches: [feature/landing-v2-photo-scroll]
+    paths: ['.github/workflows/probe-canva.yml']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe full-resolution asset endpoints
+        env:
+          SOURCE_URL: "https://media.canva.com/v2/image-resize/format:JPG/height:200/quality:75/uri:ifs%3A%2F%2FM%2Fc0dffc17-4508-4d2f-9742-c721f7fd9938/watermark:F/width:150?csig=AAAAAAAAAAAAAAAAAAAAAHgu4P_D006YxOLZ7WXCBBpSakoPXnhdtP0txsAPFSxl&exp=1794714111&osig=AAAAAAAAAAAAAAAAAAAAABeeQ2-4I354y6VFmCstuyw1dPSkeWN_eWH-7fYw-YKA&signer=media-rpc&token=AAIAAU0AJGMwZGZmYzE3LTQ1MDgtNGQyZi05NzQyLWM3MjFmN2ZkOTkzOAAAAAABod1MDBhnZQZqRpB9whNVYw2FxeazItxAHO32sMnu4zwRHfHggw&x-canva-quality=thumbnail"
+        run: |
+          python - <<'PY'
+          import os,urllib.request,urllib.error
+          source=os.environ['SOURCE_URL']
+          stem, query=source.split('?',1)
+          alternatives={
+             'signed_thumbnail':source,
+             'larger_signed':stem.replace('height:200','height:1600').replace('width:150','width:1200')+'?'+query,
+             'larger_no_sig':stem.replace('height:200','height:1600').replace('width:150','width:1200'),
+             'original_uri':'https://media.canva.com/ifs%3A%2F%2FM%2Fc0dffc17-4508-4d2f-9742-c721f7fd9938',
+          }
+          for name,url in alternatives.items():
+            try:
+              req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'})
+              with urllib.request.urlopen(req,timeout=14) as r:
+                data=r.read()
+                print(name, r.status, len(data), r.headers.get('Content-Type'))
+            except Exception as ex: print(name,type(ex).__name__,str(ex)[:140])
+          PY

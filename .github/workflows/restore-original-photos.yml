@@ -20,7 +20,7 @@ jobs:
           from pathlib import Path
           from PIL import Image,ImageOps
           src=Path('assets/original')
-          names=['hOtZvQCIUno.jpg','Screenshot_2026-11-12-00-32-00-732_com.vkontakte.android.jpg','sAiJSgPPUBI-1.jpg','Kzu_DWZ3Oz0.jpg','EFOcS_G6Ze0.jpg']
+          names=['hOtZvQCIUno.jpg','Screenshot_2026-11-12-00-32-00-732_com.vkontakte.android.jpg','sAiJSgPPUBI-1.jpg','EFOcS_G6Ze0.jpg','Kzu_DWZ3Oz0.jpg']
           for n,name in enumerate(names,1):
             candidates=[src/name] if (src/name).is_file() else []
             if len(candidates)!=1: raise RuntimeError(f'{name}: expected one original image, found {len(candidates)}')

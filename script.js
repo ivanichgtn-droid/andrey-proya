@@ -9,16 +9,32 @@ function closeMenu(){nav.classList.remove('open');toggle.setAttribute('aria-expa
 toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(open));nav.classList.toggle('open',open);nav.inert=!open;});
 $$('.nav-panel a').forEach(a=>a.addEventListener('click',closeMenu));document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});document.addEventListener('click',e=>{if(!nav.contains(e.target)&&!toggle.contains(e.target))closeMenu()});
 const backTop=$('#backTop');window.addEventListener('scroll',()=>backTop.classList.toggle('visible',scrollY>550),{passive:true});backTop.addEventListener('click',()=>scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}));
-// Reversible intersection animation: enter on downward or upward scroll, exit outside viewport.
+// Motion is progressive enhancement. Nothing is hidden before JavaScript executes.
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-const revealItems=$('.reveal');
-if('IntersectionObserver'in window&&!reducedMotion.matches){
-  const revealObserver=new IntersectionObserver(entries=>{
+const revealItems=$$('.reveal');
+if('IntersectionObserver' in window&&!reducedMotion.matches){
+  const seen=new WeakSet();
+  const observer=new IntersectionObserver(entries=>{
     for(const entry of entries){
-      entry.target.classList.toggle('in-view',entry.isIntersecting);
+      const el=entry.target;
+      if(entry.isIntersecting){
+        el.classList.add('in-view');
+        // A new entrance after scrolling away triggers a new gentle reveal.
+        if(seen.has(el) && typeof el.animate==='function'){
+          const isPhoto=el.matches('.hero-image,.about-photo,.interview,.gallery-item');
+          el.animate(
+            isPhoto ? [{opacity:.55,filter:'brightness(.75)'},{opacity:1,filter:'brightness(1)'}]
+                    : [{opacity:.45,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],
+            {duration:isPhoto?700:560,easing:'cubic-bezier(.22,.8,.3,1)',iterations:1}
+          );
+        }
+        seen.add(el);
+      }else{
+        el.classList.remove('in-view');
+      }
     }
-  },{threshold:0.08,rootMargin:'0px 0px -7% 0px'});
-  revealItems.forEach(el=>revealObserver.observe(el));
+  },{threshold:.06,rootMargin:'0px 0px -5% 0px'});
+  revealItems.forEach(el=>observer.observe(el));
 }else revealItems.forEach(el=>el.classList.add('in-view'));
 // A slight cinematic darkening of the opening portrait as it scrolls out, no zoom.
 const heroPhoto=$('.hero-image');

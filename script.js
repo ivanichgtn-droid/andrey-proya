@@ -1,4 +1,8 @@
 'use strict';
+// Reveal transitions are opt-in: never hide page content when JS cannot run.
+if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.documentElement.classList.add('motion-enabled');
+}
 const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
 const toggle=$('#menuToggle'),nav=$('#mainNav');
 function closeMenu(){nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');nav.inert=true;}

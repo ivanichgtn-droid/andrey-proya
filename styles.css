@@ -64,3 +64,15 @@ html:not(.motion-enabled) .gallery-item.reveal {
 .hero-copy.reveal,.hero-image.reveal {
   opacity:1!important;transform:none!important;filter:none!important;
 }
+
+/* Final mobile safety: content is never hidden by the scroll observer.
+   Web Animations API handles optional transient entrance effects. */
+html body .reveal,
+html body .reveal.in-view,
+html body .hero-copy.reveal,
+html body .hero-image.reveal,
+html body .about-photo.reveal,
+html body .interview.reveal,
+html body .gallery-item.reveal{
+  opacity:1;visibility:visible;transform:none;filter:none;
+}

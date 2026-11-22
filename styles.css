@@ -50,3 +50,17 @@
   .section-head h2:after{width:90px;transition:none}
   .hero-image:before{opacity:0!important;transition:none}
 }
+
+/* Fail-safe: content is visible even when the mobile in-app browser blocks JS.
+   Motion is enabled only after script.js explicitly opts in. */
+html:not(.motion-enabled) .reveal,
+html:not(.motion-enabled) .hero-image.reveal,
+html:not(.motion-enabled) .about-photo.reveal,
+html:not(.motion-enabled) .interview.reveal,
+html:not(.motion-enabled) .gallery-item.reveal {
+  opacity:1!important;transform:none!important;filter:none!important;
+}
+/* The initial screen must never be blank, even when intersection events are delayed. */
+.hero-copy.reveal,.hero-image.reveal {
+  opacity:1!important;transform:none!important;filter:none!important;
+}
